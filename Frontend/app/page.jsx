@@ -17,6 +17,7 @@ export default function Home() {
   const [regName, setRegName] = useState('');
   const [regAge, setRegAge] = useState('');
   const [newPatientId, setNewPatientId] = useState('');
+  const [manualId, setManualId] = useState('');
   
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -46,6 +47,7 @@ export default function Home() {
           
           const mockResult = Math.random() > 0.5 ? 'Detected' : 'Not Detected';
           const mockConfidence = Math.random() * 20 + 80;
+          const mockArea = mockResult === 'Detected' ? Math.random() * 30 + 50 : 0;
           
           const newPatient = {
             id: newPatientId,
@@ -61,7 +63,8 @@ export default function Home() {
                 type: 'T2-Weighted MRI',
                 status: mockResult,
                 confidence: mockConfidence,
-                details: mockResult === 'Detected' ? 'Meningioma indicators present' : 'Clear scan'
+                tumorArea: mockArea,
+                details: mockResult === 'Detected' ? `Meningioma indicators present. Estimated area: ${mockArea.toFixed(1)} mm².` : 'Clear scan'
               }
             ]
           };
@@ -143,7 +146,7 @@ export default function Home() {
                 <Brain className="w-32 h-32 text-slate-800" />
                 
                 {/* Mock Scan Overlay Effect */}
-                <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Normal_axial_T2-weighted_MR_image_of_the_brain.jpg/640px-Normal_axial_T2-weighted_MR_image_of_the_brain.jpg')] bg-cover bg-center opacity-40 mix-blend-screen" />
+                <div className="absolute inset-0 bg-[url('/mri-mock.jpg')] bg-cover bg-center opacity-40 mix-blend-screen" />
                 
                 {/* AI Bounding Box Tracker */}
                 <motion.div 
@@ -313,6 +316,26 @@ export default function Home() {
                     onCancel={() => setViewState('default')} 
                   />
                   <div className="mt-8 border-t border-white/10 pt-8">
+                    <p className="text-slate-400 text-sm mb-4">Or enter Patient ID manually:</p>
+                    <form 
+                      onSubmit={(e) => { e.preventDefault(); if (manualId) handleScanSuccess(manualId); }}
+                      className="flex gap-2 justify-center mb-8 max-w-sm mx-auto"
+                    >
+                      <input 
+                        type="text" 
+                        value={manualId}
+                        onChange={(e) => setManualId(e.target.value)}
+                        placeholder="e.g. VN-123456"
+                        className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                      />
+                      <button 
+                        type="submit"
+                        className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all"
+                      >
+                        Login
+                      </button>
+                    </form>
+
                     <p className="text-slate-400 text-sm mb-4">Don't have a card?</p>
                     <button 
                       onClick={() => setViewState('register')}

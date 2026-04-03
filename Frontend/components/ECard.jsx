@@ -1,19 +1,65 @@
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { User, Calendar, Activity, ShieldCheck, ShieldAlert, Download, Share2 } from 'lucide-react';
+import { useRef } from 'react';
+import * as htmlToImage from 'html-to-image';
 
 export default function ECard({ patient, onDownload }) {
+  const cardRef = useRef(null);
+  
   if (!patient) return null;
 
   const qrData = JSON.stringify({ id: patient.id });
   const isDetected = patient.status === 'Detected';
 
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+    try {
+      const dataUrl = await htmlToImage.toPng(cardRef.current, { 
+        backgroundColor: '#0f172a',
+        pixelRatio: 2, // High resolution
+        filter: (node) => {
+          // Ignore buttons that have data-html2canvas-ignore (we'll reuse the attribute name)
+          return node.getAttribute?.('data-html2canvas-ignore') !== 'true';
+        }
+      });
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `VaidhyaNetra-Card-${patient.id}.png`;
+      link.click();
+      
+      // Call optional onDownload prop
+      if (onDownload) onDownload();
+    } catch (err) {
+      console.error('Failed to download card', err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `VaidhyaNetra E-Card: ${patient.name}`,
+          text: `Review the latest MRI diagnostic status for Patient ID: ${patient.id}`,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.error('Error sharing', err);
+      }
+    } else {
+      // Fallback for browsers without native share menus (e.g., standard desktop Chrome sometimes)
+      navigator.clipboard.writeText(window.location.href);
+      alert('Dashboard link copied to clipboard!');
+    }
+  };
+
   return (
     <motion.div 
+      ref={cardRef}
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, type: 'spring' }}
-      className="w-full max-w-sm mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative"
+      className="w-full max-w-sm mx-auto bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative"
     >
       {/* Header Bar */}
       <div className={`h-2 w-full ${isDetected ? 'bg-red-500' : 'bg-emerald-500'}`} />
@@ -28,7 +74,7 @@ export default function ECard({ patient, onDownload }) {
               <span>{patient.age} years old</span>
             </div>
           </div>
-          <div className="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-white/5">
+          <div className="bg-slate-950 px-3 py-1.5 rounded-lg border border-white/5">
             <span className="text-xs text-slate-400 block mb-0.5">Registration ID</span>
             <span className="text-sm font-mono font-bold text-cyan-400">{patient.id}</span>
           </div>
@@ -37,7 +83,7 @@ export default function ECard({ patient, onDownload }) {
         {/* QR Code Container */}
         <div className="flex justify-center mb-8 relative">
           <div className="absolute inset-0 bg-blue-500/20 blur-[40px] rounded-full pointer-events-none" />
-          <div className="bg-white p-3 rounded-2xl shadow-xl relative z-10 border-4 border-slate-900">
+          <div className="bg-white p-3 pb-2 rounded-2xl shadow-xl relative z-10 border-4 border-slate-900 flex flex-col items-center">
             <QRCodeSVG 
               value={qrData} 
               size={140} 
@@ -45,11 +91,14 @@ export default function ECard({ patient, onDownload }) {
               fgColor="#020617" 
               bgColor="#ffffff"
             />
+            <span className="text-[#020617] font-mono font-extrabold text-sm mt-2 tracking-widest">
+              {patient.id}
+            </span>
           </div>
         </div>
 
         {/* Latest Scan Status */}
-        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 mb-6">
+        <div className="bg-slate-950 rounded-2xl p-4 border border-white/5 mb-6">
           <div className="text-xs text-slate-400 mb-3 flex items-center justify-between">
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Latest Scan</span>
             <span className="font-mono">{patient.lastScanDate || 'No scans yet'}</span>
@@ -81,14 +130,17 @@ export default function ECard({ patient, onDownload }) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div data-html2canvas-ignore="true" className="flex gap-3">
           <button 
-            onClick={onDownload}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-600 hover:to-purple-600 border border-purple-500/30 rounded-xl text-white text-sm font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.15)]"
+            onClick={handleDownload}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-600 hover:to-purple-600 border border-purple-500/30 rounded-xl text-white text-sm font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.15)] cursor-pointer"
           >
             <Download className="w-4 h-4" /> Download Card
           </button>
-          <button className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-300 transition-colors">
+          <button 
+            onClick={handleShare}
+            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-300 transition-colors cursor-pointer"
+          >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
