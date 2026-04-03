@@ -1,0 +1,91 @@
+==================================================
+VAIDHYANETRA AI BACKEND - INSTRUCTION MANUAL
+==================================================
+
+This document outlines how to set up, run, and test the FastAPI backend for the VaidhyaNetra AI MRI Brain Tumor Detection system.
+
+--------------------------------------------------
+1. PREREQUISITES
+--------------------------------------------------
+Ensure you have the following installed on your machine:
+- Python 3.10 or higher
+- MongoDB (Running locally on port 27017, or a MongoDB Atlas URI)
+
+--------------------------------------------------
+2. INITIAL SETUP
+--------------------------------------------------
+Open a terminal in this directory (d:\Vaidhyanetra\Backend) and follow these steps:
+
+Step A: Create and activate a Virtual Environment (Recommended)
+  > python -m venv venv
+  > .\venv\Scripts\activate
+
+Step B: Install the dependencies
+  > pip install -r requirements.txt
+  (Note: This will install PyTorch for the AI model which may take a few minutes)
+
+Step C: Configure Environment Variables
+  Open the `.env` file in this folder and replace the values with your actual Cloudinary API credentials. If you skip this, the backend will still run but will return placeholder mock URLs for your images.
+
+--------------------------------------------------
+3. RUNNING THE SERVER
+--------------------------------------------------
+To start the FastAPI server, run this command in your terminal:
+  > uvicorn main:app --reload
+
+The server will start up. Wait for the terminal to print:
+"Application startup complete."
+
+Your backend is now running at: http://localhost:8000
+
+--------------------------------------------------
+4. HOW TO TEST THE API ENDPOINTS
+--------------------------------------------------
+
+Below are sample cURL commands to test the endpoints. You can run these in a new terminal window or recreate them in Postman.
+
+ENDPOINT A: Predict and upload MRI Scan (POST)
+-----------------------------------------------
+This endpoint orchestrates the entire AI pipeline process.
+(Replace the path below with an actual MRI image path on your computer)
+
+For PowerShell (Windows):
+> curl.exe -X POST "http://localhost:8000/predict" `
+  -H "accept: application/json" `
+  -H "Content-Type: multipart/form-data" `
+  -F "patient_id=TEST_PATIENT_01" `
+  -F "file=@C:/path/to/your/sample_mri.jpg"
+
+For Command Prompt / Bash:
+> curl -X POST "http://localhost:8000/predict" ^
+  -H "accept: application/json" ^
+  -H "Content-Type: multipart/form-data" ^
+  -F "patient_id=TEST_PATIENT_01" ^
+  -F "file=@C:/path/to/your/sample_mri.jpg"
+
+Expected output: JSON containing the new scan details, AI confidence, tumor size, and a link to the generated PDF.
+
+
+ENDPOINT B: View Patient History (GET)
+-----------------------------------------------
+> curl.exe -X GET "http://localhost:8000/patient/TEST_PATIENT_01" -H "accept: application/json"
+
+
+ENDPOINT C: View All Patients (GET)
+-----------------------------------------------
+> curl.exe -X GET "http://localhost:8000/patients" -H "accept: application/json"
+
+
+ENDPOINT D: Download the PDF Report (GET)
+-----------------------------------------------
+(Grab the "scan_id" from the JSON output of the Predict endpoint, for example: SCAN_12345ABC)
+> curl.exe -X GET "http://localhost:8000/report/SCAN_12345ABC" --output report.pdf
+
+You can also simply paste that URL into a web browser to view the PDF:
+http://localhost:8000/report/SCAN_12345ABC
+
+
+--------------------------------------------------
+NOTE ON AI MODEL CACHING
+--------------------------------------------------
+The first time you run the /predict endpoint, PyTorch will automatically download the pre-trained U-Net weights from the internet. Subsequent calls will be much faster. If PyTorch fails, a mock array mask is generated so your frontend will never crash.
