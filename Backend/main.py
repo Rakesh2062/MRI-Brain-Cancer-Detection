@@ -43,9 +43,11 @@ app.add_middleware(
 os.makedirs("outputs/segmented_images", exist_ok=True)
 os.makedirs("outputs/reports", exist_ok=True)
 
+
 @app.get("/")
 def read_root():
     return {"status": "VaidhyaNetra AI Backend is running"}
+
 
 @app.post("/predict")
 async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...)):
@@ -74,8 +76,9 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
         class_detected, class_confidence = cls.predict_tumor(local_img_path)
 
         # 2. Segmentation (U-Net - Visual Heatmap Fallback)
-        mask, tumor_detected_seg, prob_mask = seg.run_segmentation(preprocessed_img)
-        
+        mask, tumor_detected_seg, prob_mask = seg.run_segmentation(
+            preprocessed_img)
+
         # Merge AI Decisions
         if class_detected is not None:
             tumor_detected = class_detected

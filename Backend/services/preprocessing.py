@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def preprocess_image(image_path: str):
     """
     Simulates image preprocessing required for U-Net an classification models.
