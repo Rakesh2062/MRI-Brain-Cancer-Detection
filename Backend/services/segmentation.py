@@ -37,7 +37,6 @@ def get_model():
         except Exception as e:
             print(f"Failed to load local model. Error: {e}")
             _model = False
-
     return _model
 
 
@@ -95,7 +94,6 @@ def run_segmentation(preprocessed_image_batch):
         print("Warning: Real model unavailable. Running naive mock segmentation.")
         mock_mask = np.zeros((h, w), dtype=np.uint8)
         tumor_detected = np.random.rand() > 0.3
-
         if tumor_detected:
             center_x = np.random.randint(h//4, 3*h//4)
             center_y = np.random.randint(w//4, 3*w//4)

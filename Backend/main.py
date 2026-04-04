@@ -43,11 +43,9 @@ app.add_middleware(
 os.makedirs("outputs/segmented_images", exist_ok=True)
 os.makedirs("outputs/reports", exist_ok=True)
 
-
 @app.get("/")
 def read_root():
     return {"status": "VaidhyaNetra AI Backend is running"}
-
 
 @app.post("/predict")
 async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...)):
@@ -120,7 +118,6 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
             tumor_size = 0.0
             severity = "Invalid/Unclear Scan"
             recommendation_text = "WARNING: The AI could not process this image clearly. It contains too much noise, artifacting, or is not a valid brain MRI format. Confidence has been set to 0.0. Please review manually or upload a clearer scan."
-
         # Prepare result dictionary
         result_payload = {
             "scan_id": scan_id,
@@ -157,7 +154,6 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
             "tumor_size": tumor_size,
             "explanation": recommendation_text
         })
-
     except Exception as e:
         print(f"Pipeline error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
