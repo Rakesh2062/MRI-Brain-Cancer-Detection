@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # Import Services
+# (Forced Uvicorn Restart)
 from database.db_handler import db_handler
 from utils.cloudinary_helper import upload_image
 
@@ -44,6 +45,11 @@ os.makedirs("outputs/segmented_images", exist_ok=True)
 os.makedirs("outputs/reports", exist_ok=True)
 
 
+from fastapi.staticfiles import StaticFiles
+
+# Add static route to bypass Cloudinary and serve images locally
+app.mount("/images", StaticFiles(directory="outputs/segmented_images"), name="images")
+
 @app.get("/")
 def read_root():
     return {"status": "VaidhyaNetra AI Backend is running"}
@@ -63,8 +69,8 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
     with open(local_img_path, "wb") as f:
         f.write(await file.read())
 
-    # 2. Upload original MRI to Cloudinary
-    mri_image_url = upload_image(local_img_path, folder="vaidhyanetra_mri")
+    # 2. Serve original MRI statically from localhost
+    mri_image_url = f"http://localhost:8000/images/{scan_id}_original.jpg"
 
     try:
         # --- AI PIPELINE EXECUTION ---
@@ -100,11 +106,18 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
 
         growth_info = growth.track_growth(patient_history, tumor_size)
 
-        # Explainability (Grad-CAM / Heatmap)
+        # Explainability (Heatmap)
         heatmap_local_path = f"outputs/segmented_images/{scan_id}_heatmap.jpg"
-        exp.generate_gradcam(local_img_path, heatmap_local_path)
-        heatmap_url = upload_image(
-            heatmap_local_path, folder="vaidhyanetra_heatmaps")
+        
+        # U-Net provides a pixel-perfect, high-resolution boundary (unlike ResNet's 7x7 Grad-CAM).
+        # If a tumor is detected and we have a valid U-Net mask, use U-Net for the heatmap!
+        if tumor_detected and prob_mask is not None and prob_mask.max() > 0.2:
+            exp.generate_unet_heatmap(local_img_path, prob_mask, heatmap_local_path)
+        else:
+            # Fallback to ResNet Grad-CAM for edge cases or completely healthy brains
+            exp.generate_gradcam(local_img_path, heatmap_local_path)
+            
+        heatmap_url = f"http://localhost:8000/images/{scan_id}_heatmap.jpg"
 
         # Clinical Recommendations
         recommendation_text = rec.generate_clinical_recommendation(
