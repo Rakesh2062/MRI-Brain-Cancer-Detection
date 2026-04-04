@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # Import Services
+# (Forced Uvicorn Restart)
 from database.db_handler import db_handler
 from utils.cloudinary_helper import upload_image
 
@@ -44,8 +45,6 @@ app.add_middleware(
 os.makedirs("outputs/segmented_images", exist_ok=True)
 os.makedirs("outputs/reports", exist_ok=True)
 
-# Mount outputs directory to serve images directly if Cloudinary fails
-app.mount("/static", StaticFiles(directory="outputs"), name="static")
 
 @app.get("/")
 def read_root():
@@ -68,8 +67,6 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
 
     # 2. Upload original MRI to Cloudinary
     mri_image_url = upload_image(local_img_path, folder="vaidhyanetra_mri")
-    if "mock-image-host" in mri_image_url:
-        mri_image_url = f"http://localhost:8000/static/segmented_images/{scan_id}_original.jpg"
 
     try:
         # --- AI PIPELINE EXECUTION ---
@@ -106,13 +103,11 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
 
         growth_info = growth.track_growth(patient_history, tumor_size)
 
-        # Explainability (Grad-CAM / Heatmap)
+        # Explainability (Heatmap)
         heatmap_local_path = f"outputs/segmented_images/{scan_id}_heatmap.jpg"
         exp.generate_gradcam(local_img_path, heatmap_local_path)
         heatmap_url = upload_image(
             heatmap_local_path, folder="vaidhyanetra_heatmaps")
-        if "mock-image-host" in heatmap_url:
-            heatmap_url = f"http://localhost:8000/static/segmented_images/{scan_id}_heatmap.jpg"
 
         # Clinical Recommendations
         recommendation_text = rec.generate_clinical_recommendation(
