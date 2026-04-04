@@ -7,9 +7,10 @@ from torch.utils.data import DataLoader, random_split
 import argparse
 from collections import Counter
 
-def train_model(dataset_path, val_path=None, epochs=15):
+def train_model(dataset_path, val_path=None, epochs=15, organ='brain'):
+    organ = organ.lower()
     print(f"\n{'='*60}")
-    print(f"  VaidhyaNetra ResNet-18 Training")
+    print(f"  VaidhyaNetra ResNet-18 Training — Organ: {organ.upper()}")
     print(f"{'='*60}")
     print(f"Dataset: {dataset_path}")
     
@@ -127,7 +128,7 @@ def train_model(dataset_path, val_path=None, epochs=15):
     print(f"{'='*60}")
 
     best_val_acc  = 0.0
-    best_model_path = 'models/resnet18_brain_best.pth'
+    best_model_path = f'models/resnet18_{organ}_best.pth'
     os.makedirs('models', exist_ok=True)
 
     from tqdm import tqdm
@@ -194,13 +195,13 @@ def train_model(dataset_path, val_path=None, epochs=15):
             torch.save(model.state_dict(), best_model_path)
 
     # ── 8. Save Final Model ───────────────────────────────────────────
-    final_path = 'models/resnet18_brain.pth'
+    final_path = f'models/resnet18_{organ}.pth'
     # Copy best checkpoint as the production model
     import shutil
     shutil.copy(best_model_path, final_path)
 
     print(f"\n{'='*60}")
-    print(f"  Training Complete!")
+    print(f"  Training Complete! [{organ.upper()} MODEL]")
     print(f"  Best Val Accuracy : {best_val_acc:.4f} ({best_val_acc*100:.1f}%)")
     print(f"  Model saved to    : {final_path}")
     print(f"  Class mapping     : {full_dataset.class_to_idx}")
@@ -209,10 +210,11 @@ def train_model(dataset_path, val_path=None, epochs=15):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Train ResNet-18 for Brain Tumor Classification")
+    parser = argparse.ArgumentParser(description="Train ResNet-18 for Tumor Classification (Brain or Breast)")
     parser.add_argument('--folder',     type=str, required=True,  help="Path to TRAIN folder (with Normal/ and Tumor/ subfolders)")
     parser.add_argument('--val_folder', type=str, default=None,   help="Path to VALIDATION folder (optional; auto-splits 80/20 if not provided)")
     parser.add_argument('--epochs',     type=int, default=15,     help="Number of training epochs (default: 15)")
+    parser.add_argument('--organ',      type=str, default='brain', help="Organ type: 'brain' or 'breast' (default: brain)")
     args = parser.parse_args()
 
-    train_model(args.folder, args.val_path if hasattr(args, 'val_path') else args.val_folder, args.epochs)
+    train_model(args.folder, args.val_folder, args.epochs, args.organ)

@@ -29,7 +29,7 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl md:text-2xl text-white group">
-          <BrainCircuit className="w-8 h-8 text-cyan-400 group-hover:text-purple-400 transition-colors" />
+          {/* <BrainCircuit className="w-8 h-8 text-cyan-400 group-hover:text-purple-400 transition-colors" /> */}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400">
             Vaidyanetra AI
           </span>

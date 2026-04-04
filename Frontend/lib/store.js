@@ -2,7 +2,14 @@
 export const getPatients = () => {
   if (typeof window === 'undefined') return [];
   const data = localStorage.getItem('vaidyanetra_patients');
-  return data ? JSON.parse(data) : [];
+  if (!data) return [];
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.warn('[store] Corrupted localStorage data cleared.', e);
+    localStorage.removeItem('vaidyanetra_patients');
+    return [];
+  }
 };
 
 export const getPatient = (id) => {

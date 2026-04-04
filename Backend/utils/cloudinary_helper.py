@@ -5,7 +5,6 @@ import cloudinary.uploader
 import cloudinary.api
 from dotenv import load_dotenv
 
-<<<<<<< HEAD
 load_dotenv()
 
 # Configure Cloudinary credentials from env
@@ -13,20 +12,6 @@ cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "your_cloud_name"),
     api_key=os.getenv("CLOUDINARY_API_KEY", "your_api_key"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET", "your_api_secret")
-=======
-# Force override existing environment variables so hot-reloads pick up new .env changes
-load_dotenv(override=True)
-
-# Configure Cloudinary credentials from env (strip spaces that might be caused by .env formatting)
-cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "your_cloud_name").strip()
-api_key = os.getenv("CLOUDINARY_API_KEY", "your_api_key").strip()
-api_secret = os.getenv("CLOUDINARY_API_SECRET", "your_api_secret").strip()
-
-cloudinary.config(
-    cloud_name=cloud_name,
-    api_key=api_key,
-    api_secret=api_secret
->>>>>>> features
 )
 
 def upload_image(file_path_or_bytes, folder="vaidhyanetra"):
@@ -35,14 +20,8 @@ def upload_image(file_path_or_bytes, folder="vaidhyanetra"):
     Returns the secure URL.
     """
     try:
-<<<<<<< HEAD
         # Check if dummy config is being used (to avoid crashing on mock tests without real keys)
         if os.getenv("CLOUDINARY_CLOUD_NAME") == "your_cloud_name" or not os.getenv("CLOUDINARY_CLOUD_NAME"):
-=======
-        current_cloud = os.getenv("CLOUDINARY_CLOUD_NAME", "your_cloud_name").strip()
-        # Check if dummy config is being used (to avoid crashing on mock tests without real keys)
-        if current_cloud == "your_cloud_name" or not current_cloud:
->>>>>>> features
             print("Warning: Real Cloudinary credentials not found. Returning a mock URL.")
             return f"https://res.cloudinary.com/mock/image/upload/v1/mock/mock_image_{uuid.uuid4().hex[:6]}.png"
 
@@ -62,12 +41,7 @@ def upload_base64_image(base64_string, folder="vaidhyanetra_heatmaps"):
     Alternative method to upload base64 image string.
     """
     try:
-<<<<<<< HEAD
         if os.getenv("CLOUDINARY_CLOUD_NAME") == "your_cloud_name" or not os.getenv("CLOUDINARY_CLOUD_NAME"):
-=======
-        current_cloud = os.getenv("CLOUDINARY_CLOUD_NAME", "your_cloud_name").strip()
-        if current_cloud == "your_cloud_name" or not current_cloud:
->>>>>>> features
             return f"https://res.cloudinary.com/mock/image/upload/v1/mock/mock_heatmap_{uuid.uuid4().hex[:6]}.png"
         
         response = cloudinary.uploader.upload(

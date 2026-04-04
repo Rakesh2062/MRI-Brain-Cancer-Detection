@@ -43,10 +43,11 @@ export function validateMRIFile(file) {
  *
  * @param {string} patientId  - The VN-XXXX patient registration ID
  * @param {File}   imageFile  - The selected MRI image file
+ * @param {string} [organType] - 'brain' or 'breast' (defaults to 'brain')
  * @param {AbortSignal} [signal] - Optional AbortController signal for cancellation
  * @returns {Promise<PredictResponse>}
  */
-export async function predictMRI(patientId, imageFile, signal) {
+export async function predictMRI(patientId, imageFile, organType = "brain", signal) {
   const validation = validateMRIFile(imageFile);
   if (!validation.valid) {
     throw new Error(validation.error);
@@ -55,6 +56,7 @@ export async function predictMRI(patientId, imageFile, signal) {
   const formData = new FormData();
   formData.append("patient_id", patientId);
   formData.append("file", imageFile);
+  formData.append("organ_type", organType.toLowerCase());
 
   const response = await fetch(`${API_BASE_URL}/predict`, {
     method: "POST",

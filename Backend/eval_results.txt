@@ -1,0 +1,76 @@
+﻿
+VaidhyaNetra ΓÇö Dual-Model Evaluator
+Device: cuda
+
+========================================================
+  Evaluating: BRAIN TUMOR MODEL
+========================================================
+  Classes found : ['Normal', 'Tumor']
+  ClassΓåÆIndex   : {'Normal': 0, 'Tumor': 1}
+  Distribution  : Normal=34, Tumor=46
+  Total images  : 80
+  Model loaded  : models/resnet18_brain_best.pth
+
+  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+  Γöé  BRAIN MODEL ΓÇö ACCURACY REPORT            Γöé
+  Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+  Γöé  Overall Accuracy   :  97.50%           Γöé
+  Γöé  Sensitivity (Recall):  95.65%          Γöé
+  Γöé    (how many tumors caught)              Γöé
+  Γöé  Specificity        : 100.00%          Γöé
+  Γöé    (how many normals correctly cleared)  Γöé
+  Γöé  Precision          : 100.00%          Γöé
+  Γöé  F1-Score           :  97.78%          Γöé
+  Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+  Γöé  Confusion Matrix:                       Γöé
+  Γöé    True  Positives (TP):   44             Γöé
+  Γöé    False Positives (FP):    0             Γöé
+  Γöé    True  Negatives (TN):   34             Γöé
+  Γöé    False Negatives (FN):    2 ΓåÉ Missed!  Γöé
+  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+  ΓÜá  2 tumor case(s) were MISSED (False Negatives).
+     Consider more training epochs or data augmentation.
+
+========================================================
+  Evaluating: BREAST TUMOR MODEL
+========================================================
+  Classes found : ['Normal', 'Tumor']
+  ClassΓåÆIndex   : {'Normal': 0, 'Tumor': 1}
+  Distribution  : Normal=40, Tumor=40
+  Total images  : 80
+  Model loaded  : models/resnet18_breast_best.pth
+
+  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+  Γöé  BREAST MODEL ΓÇö ACCURACY REPORT            Γöé
+  Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+  Γöé  Overall Accuracy   :  75.00%           Γöé
+  Γöé  Sensitivity (Recall):  97.50%          Γöé
+  Γöé    (how many tumors caught)              Γöé
+  Γöé  Specificity        :  52.50%          Γöé
+  Γöé    (how many normals correctly cleared)  Γöé
+  Γöé  Precision          :  67.24%          Γöé
+  Γöé  F1-Score           :  79.59%          Γöé
+  Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+  Γöé  Confusion Matrix:                       Γöé
+  Γöé    True  Positives (TP):   39             Γöé
+  Γöé    False Positives (FP):   19             Γöé
+  Γöé    True  Negatives (TN):   21             Γöé
+  Γöé    False Negatives (FN):    1 ΓåÉ Missed!  Γöé
+  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+  ΓÜá  1 tumor case(s) were MISSED (False Negatives).
+     Consider more training epochs or data augmentation.
+
+========================================================
+  SIDE-BY-SIDE COMPARISON
+========================================================
+  Metric                      Brain     Breast
+  --------------------------------------------
+  Accuracy                   97.50%      75.00%
+  Sensitivity                95.65%      97.50%
+  Specificity               100.00%      52.50%
+  Precision                 100.00%      67.24%
+  F1                         97.78%      79.59%
+========================================================
+

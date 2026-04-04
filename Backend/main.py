@@ -56,9 +56,17 @@ def read_root():
 
 
 @app.post("/predict")
-async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...)):
+async def predict_mri(
+    patient_id: str = Form(...),
+    file: UploadFile = File(...),
+    organ_type: str = Form(default="brain")
+):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image.")
+
+    organ_type = organ_type.lower().strip()
+    if organ_type not in ["brain", "breast"]:
+        raise HTTPException(status_code=400, detail=f"Invalid organ_type '{organ_type}'. Must be 'brain' or 'breast'.")
 
     # Generate unique ID for this scan
     scan_id = f"SCAN_{uuid.uuid4().hex[:8].upper()}"
@@ -78,8 +86,9 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
         # Preprocessing
         preprocessed_img = prep.preprocess_image(local_img_path)
 
-        # 1. Classification (ResNet50/18 - Primary Decision Maker)
-        class_detected, class_confidence = cls.predict_tumor(local_img_path)
+        # 1. Classification (ResNet-18 - Primary Decision Maker)
+        # Routes to the correct organ-specific model
+        class_detected, class_confidence = cls.predict_tumor(local_img_path, organ=organ_type)
 
         # 2. Segmentation (U-Net - Visual Heatmap Fallback)
         mask, tumor_detected_seg, prob_mask = seg.run_segmentation(preprocessed_img)
@@ -100,7 +109,7 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
         patient_history = patient_data["records"] if patient_data else []
 
         # Feature Extraction
-        features = feat.extract_features(mask, tumor_detected)
+        features = feat.extract_features(mask, tumor_detected, prob_mask=prob_mask, confidence_score=confidence_score)
         tumor_size = features["tumor_size_mm2"]
         severity = features["severity_indicator"]
 
@@ -132,12 +141,13 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
             confidence_score = 0.0
             tumor_size = 0.0
             severity = "Invalid/Unclear Scan"
-            recommendation_text = "WARNING: The AI could not process this image clearly. It contains too much noise, artifacting, or is not a valid brain MRI format. Confidence has been set to 0.0. Please review manually or upload a clearer scan."
+            recommendation_text = f"WARNING: The AI could not process this {organ_type} image clearly. It contains too much noise, artifacting, or is not a valid {organ_type} scan format. Confidence has been set to 0.0. Please review manually or upload a clearer scan."
 
         # Prepare result dictionary
         result_payload = {
             "scan_id": scan_id,
             "date": timestamp,
+            "organ_type": organ_type,
             "mri_image_url": mri_image_url,
             "heatmap_url": heatmap_url,
             "tumor_detected": tumor_detected,
@@ -163,6 +173,7 @@ async def predict_mri(patient_id: str = Form(...), file: UploadFile = File(...))
 
         return JSONResponse(content={
             "scan_id": scan_id,
+            "organ_type": organ_type,
             "mri_image_url": mri_image_url,
             "heatmap_url": heatmap_url,
             "tumor_detected": tumor_detected,

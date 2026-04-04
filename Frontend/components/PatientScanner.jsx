@@ -7,10 +7,7 @@ import { motion } from "framer-motion";
 
 export default function PatientScanner({ onScan, onCancel }) {
   const [error, setError] = useState(null);
-<<<<<<< HEAD
   const [manualId, setManualId] = useState("");
-=======
->>>>>>> features
 
   const handleScan = (text) => {
     try {
@@ -29,7 +26,6 @@ export default function PatientScanner({ onScan, onCancel }) {
     }
   };
 
-<<<<<<< HEAD
   const handleManualSubmit = () => {
     if (!manualId.trim()) {
       setError("Please enter a valid Patient ID");
@@ -40,8 +36,6 @@ export default function PatientScanner({ onScan, onCancel }) {
     onScan(cleanedId);
   };
 
-=======
->>>>>>> features
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -51,11 +45,7 @@ export default function PatientScanner({ onScan, onCancel }) {
       <div className="flex items-center justify-between p-4 border-b border-white/5 bg-black/20">
         <div className="flex items-center gap-2">
           <ScanLine className="w-5 h-5 text-cyan-400" />
-<<<<<<< HEAD
           <h3 className="font-semibold text-white">Find Patient</h3>
-=======
-          <h3 className="font-semibold text-white">Scan Patient Card</h3>
->>>>>>> features
         </div>
         <button onClick={onCancel} className="text-slate-400 hover:text-white transition">
           <XCircle className="w-5 h-5" />
@@ -85,7 +75,6 @@ export default function PatientScanner({ onScan, onCancel }) {
         </div>
       )}
 
-<<<<<<< HEAD
       <div className="p-4 bg-black/20 flex flex-col gap-4">
         <div className="text-center text-xs text-slate-400">
           Position the QR code within the frame to scan.
@@ -116,10 +105,6 @@ export default function PatientScanner({ onScan, onCancel }) {
             Search
           </button>
         </div>
-=======
-      <div className="p-4 text-center bg-black/20 text-xs text-slate-400">
-        Position the QR code within the frame to scan.
->>>>>>> features
       </div>
     </motion.div>
   );
