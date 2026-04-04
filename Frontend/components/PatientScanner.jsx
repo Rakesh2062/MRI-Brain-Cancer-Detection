@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 export default function PatientScanner({ onScan, onCancel }) {
   const [error, setError] = useState(null);
+  const [manualId, setManualId] = useState("");
 
   const handleScan = (text) => {
     try {
@@ -25,6 +26,16 @@ export default function PatientScanner({ onScan, onCancel }) {
     }
   };
 
+  const handleManualSubmit = () => {
+    if (!manualId.trim()) {
+      setError("Please enter a valid Patient ID");
+      return;
+    }
+    // Clean up input and assume it's valid to let the root page handle routing
+    const cleanedId = manualId.trim().toUpperCase();
+    onScan(cleanedId);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -34,7 +45,7 @@ export default function PatientScanner({ onScan, onCancel }) {
       <div className="flex items-center justify-between p-4 border-b border-white/5 bg-black/20">
         <div className="flex items-center gap-2">
           <ScanLine className="w-5 h-5 text-cyan-400" />
-          <h3 className="font-semibold text-white">Scan Patient Card</h3>
+          <h3 className="font-semibold text-white">Find Patient</h3>
         </div>
         <button onClick={onCancel} className="text-slate-400 hover:text-white transition">
           <XCircle className="w-5 h-5" />
@@ -64,8 +75,36 @@ export default function PatientScanner({ onScan, onCancel }) {
         </div>
       )}
 
-      <div className="p-4 text-center bg-black/20 text-xs text-slate-400">
-        Position the QR code within the frame to scan.
+      <div className="p-4 bg-black/20 flex flex-col gap-4">
+        <div className="text-center text-xs text-slate-400">
+          Position the QR code within the frame to scan.
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="h-px bg-white/10 flex-1"></div>
+          <span className="text-xs text-slate-500 font-medium">OR</span>
+          <div className="h-px bg-white/10 flex-1"></div>
+        </div>
+
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            placeholder="Enter Patient ID (e.g. VN-1234)" 
+            className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400/50"
+            value={manualId}
+            onChange={(e) => {
+              setManualId(e.target.value);
+              if (error) setError(null);
+            }}
+            onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
+          />
+          <button 
+            onClick={handleManualSubmit}
+            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+          >
+            Search
+          </button>
+        </div>
       </div>
     </motion.div>
   );

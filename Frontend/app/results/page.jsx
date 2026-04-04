@@ -1,12 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, AlertTriangle, Download, Share2, Clock, FileText, Brain, UploadCloud } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, Download, Share2, Clock, FileText, Brain, UploadCloud, AlertCircle, ImageIcon, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useEffect, useState, Suspense } from 'react';
-import ECard from '../components/ECard.jsx';
-import { getPatient, savePatient } from '../lib/store';
+import ECard from '../../components/ECard.jsx';
+import { getPatient, savePatient } from '../../lib/store';
+import { predictMRI, getReportURL } from '../../lib/api';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -15,6 +17,7 @@ function DashboardContent() {
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -23,47 +26,55 @@ function DashboardContent() {
     }
   }, [id]);
 
-  const handleNewScan = () => {
-    if (!patient) return;
+  const handleNewScan = async (file) => {
+    if (!patient || !file) return;
+    setUploadError(null);
     setIsUploading(true);
-    setUploadProgress(0);
-    
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        const next = prev + Math.random() * 20;
-        if (next >= 100) {
-          clearInterval(interval);
-          
-          const mockResult = Math.random() > 0.5 ? 'Detected' : 'Not Detected';
-          const mockConfidence = Math.random() * 20 + 80;
-          const newDate = new Date().toISOString().split('T')[0];
-          
-          const updatedPatient = {
-            ...patient,
-            status: mockResult,
-            confidence: mockConfidence,
-            lastScanDate: newDate,
-            history: [
-              ...patient.history,
-              {
-                id: `SCAN-${Math.floor(Math.random() * 1000)}`,
-                date: newDate,
-                type: 'T2-Weighted MRI',
-                status: mockResult,
-                confidence: mockConfidence,
-                details: mockResult === 'Detected' ? 'Meningioma indicators present' : 'Clear scan'
-              }
-            ]
-          };
-          
-          savePatient(updatedPatient);
-          setPatient(updatedPatient);
-          setIsUploading(false);
-          return 100;
-        }
-        return next;
-      });
-    }, 300);
+    setUploadProgress(10);
+
+    try {
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => (prev < 85 ? prev + Math.random() * 8 : prev));
+      }, 600);
+
+      const result = await predictMRI(patient.id, file);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      const status = result.tumor_detected ? 'Detected' : 'Not Detected';
+      const newDate = new Date().toISOString().split('T')[0];
+
+      const updatedPatient = {
+        ...patient,
+        status,
+        confidence: result.confidence * 100,
+        lastScanDate: newDate,
+        history: [
+          ...patient.history,
+          {
+            id: result.scan_id,
+            date: newDate,
+            type: 'T2-Weighted MRI',
+            status,
+            confidence: result.confidence * 100,
+            details: result.explanation,
+            heatmap_url: result.heatmap_url,
+            mri_image_url: result.mri_image_url,
+            tumor_size: result.tumor_size,
+            growth_trend: result.growth_trend
+          }
+        ]
+      };
+
+      savePatient(updatedPatient);
+      setPatient(updatedPatient);
+      setIsUploading(false);
+      setUploadProgress(0);
+    } catch (err) {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadError(err.message || 'Upload failed. Please try again.');
+    }
   };
 
   if (!patient && id) {
@@ -111,7 +122,7 @@ function DashboardContent() {
           <div className="lg:sticky lg:top-24">
             <ECard patient={patient} />
             
-            <div className="mt-6">
+          <div className="mt-6">
               <AnimatePresence mode="wait">
                 {!isUploading ? (
                   <motion.div 
@@ -125,16 +136,15 @@ function DashboardContent() {
                       accept=".dcm,.jpg,.jpeg,.png"
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          handleNewScan();
-                        }
+                        const file = e.target.files?.[0];
+                        if (file) handleNewScan(file);
                       }}
                     />
                     <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:scale-110 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] pointer-events-none">
                       <UploadCloud className="w-6 h-6 text-cyan-400 pointer-events-none" />
                     </div>
                     <span className="font-medium mt-2 pointer-events-none">Upload New Scan</span>
-                    <span className="text-xs text-slate-400 pointer-events-none">Add a new MRI to patient record</span>
+                    <span className="text-xs text-slate-400 pointer-events-none">JPG / PNG / DICOM</span>
                   </motion.div>
                 ) : (
                   <motion.div 
@@ -148,17 +158,68 @@ function DashboardContent() {
                       <span>{Math.round(uploadProgress)}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500" style={{ width: `${uploadProgress}%` }} />
+                      <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                     </div>
+                    <p className="text-xs text-slate-400 mt-3">Running AI pipeline...</p>
                   </motion.div>
                 )}
               </AnimatePresence>
+              {uploadError && (
+                <div className="mt-3 flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right Column: Scan History & Insights */}
           <div className="lg:col-span-2 flex flex-col gap-8">
             
+            {/* Tumor Growth Graph */}
+            {patient?.history.some(h => h.tumor_size !== undefined && h.tumor_size > 0) && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+                className="bg-white/5 border border-white/10 rounded-3xl p-6 lg:p-8 backdrop-blur-md"
+              >
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                  <h3 className="font-semibold text-xl text-white flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-purple-400" />
+                    Tumor Growth Tracking
+                  </h3>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={patient.history.filter(h => h.tumor_size !== undefined)}
+                      margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" fontSize={12} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} axisLine={false} tickLine={false} unit=" mm²" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
+                        itemStyle={{ color: '#c084fc', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '12px' }}
+                        cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="tumor_size" 
+                        stroke="#c084fc" 
+                        strokeWidth={4}
+                        dot={{ fill: '#0f172a', r: 5, strokeWidth: 2, stroke: '#c084fc' }}
+                        activeDot={{ r: 8, fill: '#e879f9', stroke: '#0f172a', strokeWidth: 2 }}
+                        name="Size"
+                        animationDuration={1500}
+                        animationEasing="ease-out"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.div>
+            )}
+
             {/* History Feed */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
@@ -216,12 +277,51 @@ function DashboardContent() {
                             <span className="text-xs font-mono text-white">Confidence: {record.confidence.toFixed(1)}%</span>
                           </div>
                           <p className="text-sm text-slate-300">{record.details}</p>
+                          {record.tumor_size > 0 && (
+                            <p className="text-xs text-slate-400 mt-1">Tumor Size: {record.tumor_size.toFixed(2)} mm²</p>
+                          )}
+                          {record.growth_trend && record.growth_trend !== "No History" && (
+                            <p className={`text-xs mt-1 font-bold ${
+                              record.growth_trend.includes('Increase') ? 'text-red-400' 
+                              : record.growth_trend.includes('Decrease') ? 'text-emerald-400' 
+                              : 'text-amber-400'
+                            }`}>
+                              Growth Trend: {record.growth_trend}
+                            </p>
+                          )}
                         </div>
+
+                        {/* Heatmap & MRI Images */}
+                        {(record.heatmap_url || record.mri_image_url) && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            {record.mri_image_url && (
+                              <div className="rounded-xl overflow-hidden border border-white/10">
+                                <p className="text-[10px] text-slate-400 px-2 pt-1 pb-0.5 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Original MRI</p>
+                                <img src={record.mri_image_url} alt="MRI Scan" className="w-full object-cover" />
+                              </div>
+                            )}
+                            {record.heatmap_url && (
+                              <div className="rounded-xl overflow-hidden border border-white/10">
+                                <p className="text-[10px] text-slate-400 px-2 pt-1 pb-0.5 flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Grad-CAM Heatmap</p>
+                                <img src={record.heatmap_url} alt="Grad-CAM Heatmap" className="w-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="mt-3 flex justify-end">
-                          <button className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-purple-400 hover:scale-105 transition-all duration-300 font-medium">
-                            <FileText className="w-3.5 h-3.5" /> View Full Report
-                          </button>
+                          {record.id?.startsWith('SCAN_') ? (
+                            <a
+                              href={getReportURL(record.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-purple-400 hover:scale-105 transition-all duration-300 font-medium"
+                            >
+                              <FileText className="w-3.5 h-3.5" /> Download PDF Report
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-600">No report available</span>
+                          )}
                         </div>
                       </div>
                     </motion.div>

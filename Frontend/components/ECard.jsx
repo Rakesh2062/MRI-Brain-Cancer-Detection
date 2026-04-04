@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { User, Calendar, Activity, ShieldCheck, ShieldAlert, Download, Share2 } from 'lucide-react';
 
 export default function ECard({ patient, onDownload }) {
@@ -7,6 +7,74 @@ export default function ECard({ patient, onDownload }) {
 
   const qrData = JSON.stringify({ id: patient.id });
   const isDetected = patient.status === 'Detected';
+
+  const handleDownload = () => {
+    if (onDownload) {
+      onDownload();
+      return;
+    }
+    
+    const qrCanvas = document.getElementById('patient-qr');
+    if (!qrCanvas) return;
+    
+    // Create a new canvas to build a beautiful "ID Card"
+    const cardCanvas = document.createElement('canvas');
+    const ctx = cardCanvas.getContext('2d');
+    
+    const width = 340;
+    const height = 440;
+    cardCanvas.width = width;
+    cardCanvas.height = height;
+    
+    // Draw background (slate-950)
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw header accent line
+    ctx.fillStyle = isDetected ? '#ef4444' : '#10b981'; // red or emerald
+    ctx.fillRect(0, 0, width, 8);
+    
+    // Draw Patient Name
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText(patient.name, width / 2, 60);
+    
+    // Draw Registration ID
+    ctx.fillStyle = '#22d3ee'; // cyan-400
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText(`ID: ${patient.id}`, width / 2, 95);
+    
+    // Draw the QR Code Background
+    const qrSize = 180;
+    const qrX = (width - qrSize) / 2;
+    const qrY = 135;
+    
+    ctx.fillStyle = '#ffffff';
+    // Slightly larger white box for padding
+    ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+    
+    // Draw actual QR Code
+    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+    
+    // Draw Footer Text
+    ctx.fillStyle = '#94a3b8'; // slate-400
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText('VaidhyaNetra AI Scanner', width / 2, 380);
+    
+    ctx.fillStyle = '#64748b'; // slate-500
+    ctx.font = 'normal 13px sans-serif';
+    ctx.fillText('Scan to securely view patient history', width / 2, 405);
+    
+    // Trigger the generated composite download
+    const pngUrl = cardCanvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    downloadLink.download = `${patient.id.replace('VN-','')}_Patient_Card.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
 
   return (
     <motion.div 
@@ -38,7 +106,8 @@ export default function ECard({ patient, onDownload }) {
         <div className="flex justify-center mb-8 relative">
           <div className="absolute inset-0 bg-blue-500/20 blur-[40px] rounded-full pointer-events-none" />
           <div className="bg-white p-3 rounded-2xl shadow-xl relative z-10 border-4 border-slate-900">
-            <QRCodeSVG 
+            <QRCodeCanvas 
+              id="patient-qr"
               value={qrData} 
               size={140} 
               level="H" 
@@ -83,7 +152,7 @@ export default function ECard({ patient, onDownload }) {
         {/* Actions */}
         <div className="flex gap-3">
           <button 
-            onClick={onDownload}
+            onClick={handleDownload}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-600 hover:to-purple-600 border border-purple-500/30 rounded-xl text-white text-sm font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.15)]"
           >
             <Download className="w-4 h-4" /> Download Card
