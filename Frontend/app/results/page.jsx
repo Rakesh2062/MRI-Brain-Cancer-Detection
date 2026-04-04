@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import ECard from '../../components/ECard.jsx';
+import Card from '../../components/Card';
 import { getPatient, savePatient } from '../../lib/store';
 import { predictMRI, getReportURL } from '../../lib/api';
 
@@ -171,7 +172,7 @@ function DashboardContent() {
 
   if (!patient && id) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+      <div className="flex h-full items-center justify-center text-white">
         Loading patient data...
       </div>
     );
@@ -179,17 +180,17 @@ function DashboardContent() {
 
   if (!patient && !id) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white gap-4">
+      <div className="flex h-[80vh] flex-col items-center justify-center text-white gap-4">
         <AlertTriangle className="w-12 h-12 text-red-500" />
         <h2>No patient ID provided.</h2>
-        <Link href="/" className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">Go Home</Link>
+        <Link href="/" className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">Go to Dashboard</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-24 pb-12 px-4">
-      <div className="container mx-auto max-w-6xl">
+    <div className="space-y-8 pb-12 w-full">
+      <div className="w-full">
 
         {/* Header */}
         <motion.div
